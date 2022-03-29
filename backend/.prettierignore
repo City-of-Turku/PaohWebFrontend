@@ -1,0 +1,7 @@
+.husky
+node_modules
+coverage
+dist
+Dockerfile
+package*.json
+.prettierignore

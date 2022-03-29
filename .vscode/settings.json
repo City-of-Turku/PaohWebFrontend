@@ -1,0 +1,67 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.associations": {
+    "**/*pipelines.yml": "azure-pipelines"
+  },
+  "cSpell.ignorePaths": [
+    "**/translations/fi.json",
+    "**/translations/sv.json",
+    ".vscode/**"
+  ],
+  "cSpell.words": [
+    "asumistuki",
+    "descs",
+    "dtos",
+    "echannel",
+    "joukkoliikenne",
+    "Julkaisut",
+    "Kaarina",
+    "Karins",
+    "Kemiönsaari",
+    "Kimitoön",
+    "Koski",
+    "Koskis",
+    "kunta",
+    "Kustavi",
+    "Lieto",
+    "Loimaa",
+    "Lundo",
+    "Mårtens",
+    "Marttila",
+    "Masku",
+    "Mynämäki",
+    "Nådendal",
+    "Nousiainen",
+    "Nousis",
+    "nums",
+    "Nystad",
+    "Oripää",
+    "Paimio",
+    "Palveluohjain",
+    "Parainen",
+    "Pemar",
+    "Pöytis",
+    "Pöytyä",
+    "Pyhäranta",
+    "Raisio",
+    "Reso",
+    "Rusko",
+    "Sagu",
+    "Salo",
+    "Sauvo",
+    "Somero",
+    "Taivassalo",
+    "Tietosuojaseloste",
+    "Tövsala",
+    "Vehmaa",
+    "Vemo",
+    "Virmo",
+    "Xmark"
+  ]
+}

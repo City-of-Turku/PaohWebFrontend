@@ -1,0 +1,39 @@
+#root {
+  display: flex;
+  flex: 1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+  height: auto;
+  display: flex;
+  flex: 1;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Chatwidget confirmation alert */
+body .rw-confirm-dialog {
+  font-family: 'Lexend', sans-serif;
+}
+
+body .rw-confirm-button-group button {
+  font-weight: 800;
+}
+
+body .rw-confirm-button-group button.confirm {
+  background-color: #111832;
+  border-color: #111832;
+}

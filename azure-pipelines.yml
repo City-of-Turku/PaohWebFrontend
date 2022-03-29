@@ -1,0 +1,319 @@
+name: A pipeline for testing, building and deploying the website's front and back end
+
+resources:
+  - repo: self
+
+trigger:
+  branches:
+    include:
+      - main
+      - dev
+  paths:
+    # Paths/files if updated, won't by themselves trigger a deployment
+    exclude:
+      - README.md
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  isProd: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  isTest: $[eq(variables['Build.SourceBranch'], 'refs/heads/dev')]
+
+  azureSubscriptionEndpointTest: tku-palveluohjain-testi-sc
+  azureSubscriptionEndpointProd: tku-palveluohjain-tuotanto-sc
+  azurestorageaccountnameTest: tkupaohteststorage
+  azurestorageaccountnameProd: tkupaohtuotstorage
+  azureContainerRegistryTest: tkupaohtestcontainerregistry.azurecr.io
+  azureContainerRegistryProd: tkupaohtuotcontainerregistry.azurecr.io
+  dockerRegistryEndpointTest: tku-palveluohjain-testi-docker-sc
+  dockerRegistryEndpointProd: tku-palveluohjain-tuotanto-docker-sc
+  kubernetesServiceConnectionTest: tku-palveluohjain-testi-aks-sc
+  kubernetesServiceConnectionProd: tku-palveluohjain-tuotanto-aks-sc
+
+  # For backend
+  imageRepository: web_backend
+  dockerfilePath: '$(System.DefaultWorkingDirectory)/backend/Dockerfile'
+  tag: '$(Build.BuildId)'
+
+stages:
+  - stage: BuildTest
+    displayName: Build and test website front and backend for test environment
+    variables:
+      - group: tku-paoh-test-variable-group
+    condition: eq(variables.isTest, true)
+    jobs:
+      - job: BuildFrontend
+        steps:
+          - task: InstallSSHKey@0
+            displayName: 'Install an SSH key'
+            inputs:
+              knownHostsEntry: '$(github_known_host)'
+              sshPublicKey: '$(github_public)'
+              sshPassphrase: '$(github_phrase)'
+              sshKeySecureFile: 'web_pipeline'
+
+          - script: |
+              npm install
+            displayName: 'Install dependencies'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/frontend'
+
+          # By default, this tasks will fail if eslint finds errors
+          - task: Npm@1
+            displayName: 'Lint frontend'
+            inputs:
+              command: custom
+              customCommand: 'run lint'
+              workingDir: '$(System.DefaultWorkingDirectory)/frontend'
+
+          - task: Bash@3
+            displayName: 'Test frontend'
+            inputs:
+              targetType: 'inline'
+              script: 'npm run test:ci'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/frontend'
+
+          - task: PublishTestResults@2
+            displayName: 'supply npm test results to pipelines'
+            condition: succeededOrFailed() # because otherwise we won't know what tests failed
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/junit*.xml'
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/frontend/coverage/cobertura-coverage.xml'
+              failIfCoverageEmpty: true
+
+      - job: BuildBackend
+        steps:
+          - script: |
+              npm install
+              npm run build
+            displayName: 'npm install and build'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/backend'
+          - task: Bash@3
+            displayName: 'Test backend'
+            inputs:
+              targetType: 'inline'
+              script: 'npm test'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/backend'
+
+          # Build and push Docker image
+          - task: Docker@2
+            displayName: 'Build and push an image to container registry'
+            inputs:
+              command: buildAndPush
+              repository: $(imageRepository)
+              dockerfile: $(dockerfilePath)
+              containerRegistry: $(dockerRegistryEndpointTest)
+              tags: |
+                $(tag)
+
+  - stage: BuildProd
+    displayName: Build and test website front and backend for prod environment
+    variables:
+      - group: tku-paoh-tuot-variable-group
+    condition: eq(variables.isProd, true)
+    jobs:
+      - job: BuildFrontend
+        steps:
+          - task: InstallSSHKey@0
+            displayName: 'Install an SSH key'
+            inputs:
+              knownHostsEntry: '$(github_known_host)'
+              sshPublicKey: '$(github_public)'
+              sshPassphrase: '$(github_phrase)'
+              sshKeySecureFile: 'web_pipeline'
+          - task: Npm@1
+            displayName: 'Install frontend dependencies'
+            inputs:
+              command: 'ci'
+              workingDir: '$(System.DefaultWorkingDirectory)/frontend'
+
+          - task: Bash@3
+            displayName: 'Lint frontend'
+            inputs:
+              targetType: 'inline'
+              script: 'npm run lint'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/frontend'
+
+          - task: Bash@3
+            displayName: 'Test frontend'
+            inputs:
+              targetType: 'inline'
+              script: 'npm run test:ci'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/frontend'
+
+          - task: PublishTestResults@2
+            displayName: 'supply npm test results to pipelines'
+            condition: succeededOrFailed() # because otherwise we won't know what tests failed
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/junit*.xml'
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/frontend/coverage/cobertura-coverage.xml'
+              failIfCoverageEmpty: true
+
+      - job: BuildBackend
+        steps:
+          - script: |
+              npm install
+              npm run build
+            displayName: 'npm install and build'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/backend'
+          - task: Bash@3
+            displayName: 'Test backend'
+            inputs:
+              targetType: 'inline'
+              script: 'npm test'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/backend'
+
+          # Build and push Docker image
+          - task: Docker@2
+            displayName: 'Build and push an image to container registry'
+            inputs:
+              command: buildAndPush
+              repository: $(imageRepository)
+              dockerfile: $(dockerfilePath)
+              containerRegistry: $(dockerRegistryEndpointProd)
+              tags: |
+                $(tag)
+
+  - stage: DeployTest
+    displayName: Deploy frontend and backend to test environment
+    variables:
+      - group: tku-paoh-test-variable-group
+    dependsOn: BuildTest
+    condition: and(eq(variables.isTest, true), succeeded())
+    jobs:
+      - job: DeployStaticFrontend
+        steps:
+          # Building app in separate task and then deploying to Static Web App (and skipping build there)
+          # allows using env variables. (Also note in React env vars need to start with REACT_APP_...)
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                npm install 
+                npm run build
+              workingDirectory: '$(System.DefaultWorkingDirectory)/frontend'
+            env:
+              REACT_APP_BOTFRONT_ROOT_URL: $(botfrontrooturl)
+              REACT_APP_AKS_INGRESS_ROOT_URL: $(aksingressrooturl)
+              REACT_APP_CHATBOT_URL: $(aksingressrooturl)
+
+          - task: AzureStaticWebApp@0
+            inputs:
+              app_location: '/frontend/build' # Build from previous task
+              output_location: ''
+              skip_app_build: true
+              config_file_location: '/frontend'
+              verbose: true
+              build_timeout_in_minutes: 20
+              azure_static_web_apps_api_token: $(staticwebappdeploymenttoken)
+
+      - job: DeployBackend
+        displayName: 'Deploy backend to AKS'
+        steps:
+          - task: KubernetesManifest@0
+            displayName: Create ImagePullSecret
+            inputs:
+              action: createSecret
+              namespace: default
+              kubernetesServiceConnection: $(kubernetesServiceConnectionTest)
+              secretName: testimagepullsecret
+              dockerRegistryEndpoint: $(dockerRegistryEndpointTest)
+
+          - task: replacetokens@3
+            displayName: 'Replace tokens in .yaml files'
+            inputs:
+              targetFiles: |
+                $(Build.SourcesDirectory)/kube/*.yaml
+              verbosity: detailed
+              tokenPrefix: '__'
+              tokenSuffix: '__'
+
+          - task: KubernetesManifest@0
+            displayName: Deploy to Kubernetes test environment cluster
+            inputs:
+              action: deploy
+              namespace: default
+              kubernetesServiceConnection: $(kubernetesServiceConnectionTest)
+              manifests: |
+                $(Build.SourcesDirectory)/kube/*.yaml
+              imagePullSecrets: |
+                testimagepullsecret
+              containers: |
+                '$(azureContainerRegistryTest)/$(imageRepository):$(tag)'
+
+  - stage: DeployProd
+    displayName: Deploy frontend and backend to prod environment
+    variables:
+      - group: tku-paoh-tuot-variable-group
+    dependsOn: BuildProd
+    condition: eq(variables.isProd, true)
+    jobs:
+      - job: DeployStaticFrontend
+        steps:
+          # Building app in separate task and then deploying to Static Web App (and skipping build there)
+          # allows using env variables. (Also note in React env vars need to start with REACT_APP_...)
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                npm install 
+                npm run build
+              workingDirectory: '$(System.DefaultWorkingDirectory)/frontend'
+            env:
+              REACT_APP_BOTFRONT_ROOT_URL: $(botfrontrooturl)
+              REACT_APP_AKS_INGRESS_ROOT_URL: $(aksingressrooturl)
+              REACT_APP_CHATBOT_URL: $(aksingressrooturl)
+
+          - task: AzureStaticWebApp@0
+            inputs:
+              app_location: '/frontend/build' # Build from previous task
+              output_location: ''
+              skip_app_build: true
+              config_file_location: '/frontend'
+              verbose: true
+              build_timeout_in_minutes: 20
+              azure_static_web_apps_api_token: $(staticwebappdeploymenttoken)
+
+      - job: DeployBackend
+        displayName: 'Deploy backend to AKS'
+        steps:
+          - task: KubernetesManifest@0
+            displayName: Create ImagePullSecret
+            inputs:
+              action: createSecret
+              namespace: default
+              kubernetesServiceConnection: $(kubernetesServiceConnectionProd)
+              secretName: prodimagepullsecret
+              dockerRegistryEndpoint: $(dockerRegistryEndpointProd)
+
+          - task: replacetokens@3
+            displayName: 'Replace tokens in .yaml files'
+            inputs:
+              targetFiles: |
+                $(Build.SourcesDirectory)/kube/*.yaml
+              verbosity: detailed
+              tokenPrefix: '__'
+              tokenSuffix: '__'
+
+          - task: KubernetesManifest@0
+            displayName: Deploy to Kubernetes prod environment cluster
+            inputs:
+              action: deploy
+              namespace: default
+              kubernetesServiceConnection: $(kubernetesServiceConnectionProd)
+              manifests: |
+                $(Build.SourcesDirectory)/kube/*.yaml
+              imagePullSecrets: |
+                prodimagepullsecret
+              containers: |
+                '$(azureContainerRegistryProd)/$(imageRepository):$(tag)'

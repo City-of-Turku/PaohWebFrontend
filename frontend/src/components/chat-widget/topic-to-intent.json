@@ -1,0 +1,18 @@
+{
+  "asumistuki": "P4.1_housing_allowance",
+  "childcare": "P3.4_lastenhoitopalvelut",
+  "death": "ke14_death",
+  "divorce": "P3.1_divorce",
+  "homeservices": "P4.3_kotitalouspalvelut",
+  "housing_allowance": "P4.1_housing_allowance",
+  "in_debt": "ke9_debt",
+  "joukkoliikenne": "public_transport",
+  "ke8_other": "ke8_other",
+  "leisure": "leisure_services",
+  "library": "P25.1_library",
+  "marriage": "P3.1_marriage",
+  "moving": "P1.5_moving",
+  "public_transport": "public_transport",
+  "social_assistance_benefit": "P4.10_social_assistance_benefit",
+  "unemployment": "ke8_losing_job"
+}

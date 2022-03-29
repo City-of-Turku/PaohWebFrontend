@@ -1,0 +1,6 @@
+.DS_Store
+.env*
+
+# SonarQube
+.scannerwork
+sonar-project.properties

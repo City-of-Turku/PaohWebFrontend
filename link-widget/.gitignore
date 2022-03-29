@@ -1,0 +1,8 @@
+/node_modules
+/lib/
+
+jsconfig.json
+.vscode
+yarn.lock
+.cache
+.DS_Store

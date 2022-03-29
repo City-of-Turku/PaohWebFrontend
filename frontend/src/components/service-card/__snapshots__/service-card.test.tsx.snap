@@ -1,0 +1,128 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Extracting description from a service renders a service that does not have any description available 1`] = `
+<DocumentFragment>
+  <div
+    class="MuiPaper-root MuiCard-root css-1iszrn9 MuiPaper-elevation1 MuiPaper-rounded"
+  >
+    <div
+      class="MuiCardHeader-root"
+    >
+      <div
+        class="MuiCardHeader-content"
+      >
+        <span
+          class="MuiTypography-root MuiCardHeader-title MuiTypography-h5 MuiTypography-displayBlock"
+        >
+          <div
+            class="css-oj1ggt"
+          >
+            <div
+              class="css-14yu5aj"
+            >
+              <h3
+                class="MuiTypography-root organization-name MuiTypography-body1"
+              />
+              <h2
+                class="MuiTypography-root service-name MuiTypography-h1"
+                lang="fi"
+              >
+                <a
+                  class="css-shy10a"
+                  href="/404"
+                >
+                  <span
+                    class="link-content"
+                  >
+                    Esimerkkipalvelu
+                  </span>
+                </a>
+              </h2>
+              <h3
+                class="MuiTypography-root service-area MuiTypography-body1"
+              />
+            </div>
+          </div>
+        </span>
+      </div>
+    </div>
+    <div
+      class="MuiCardContent-root"
+    >
+      <div>
+        Virhe: Palvelulle ei ole saatavilla kuvausta.
+      </div>
+    </div>
+    <div
+      class="MuiCardContent-root"
+    />
+  </div>
+</DocumentFragment>
+`;
+
+exports[`renders a recommendation that does not have any channels 1`] = `
+<DocumentFragment>
+  <div
+    class="MuiPaper-root MuiCard-root css-1iszrn9 MuiPaper-elevation1 MuiPaper-rounded"
+  >
+    <div
+      class="MuiCardHeader-root"
+    >
+      <div
+        class="MuiCardHeader-content"
+      >
+        <span
+          class="MuiTypography-root MuiCardHeader-title MuiTypography-h5 MuiTypography-displayBlock"
+        >
+          <div
+            class="css-oj1ggt"
+          >
+            <div
+              class="css-14yu5aj"
+            >
+              <h3
+                class="MuiTypography-root organization-name MuiTypography-body1"
+              />
+              <h2
+                class="MuiTypography-root service-name MuiTypography-h1"
+                lang="fi"
+              >
+                <a
+                  class="css-shy10a"
+                  href="/1"
+                >
+                  <span
+                    class="link-content"
+                  >
+                    Esimerkkipalvelu
+                  </span>
+                </a>
+              </h2>
+              <h3
+                class="MuiTypography-root service-area MuiTypography-body1"
+              />
+            </div>
+          </div>
+        </span>
+      </div>
+    </div>
+    <div
+      class="MuiCardContent-root"
+    >
+      <div
+        class="css-1anmknu"
+      >
+        <div
+          class="description"
+          lang="fi"
+        >
+          Tämä on palvelun kuvaus.
+        </div>
+      </div>
+    </div>
+    <div
+      class="MuiCardContent-root"
+    />
+  </div>
+</DocumentFragment>
+`;
