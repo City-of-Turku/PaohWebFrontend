@@ -93,12 +93,11 @@ export function convertChannels(
         ch.descriptions[lang].length > 0
           ? convertChannelDescriptions(ch.descriptions[lang], lang)
           : convertChannelDescriptions(ch.descriptions.fi, 'fi'),
-      webPages: uniqueStrings(convertStringArray(ch.webPages, lang)),
-      emails: uniqueStrings(convertStringArray(ch.emails, lang)),
+      webPages: uniqueNonEmptyStrings(convertStringArray(ch.webPages, lang)),
+      emails: uniqueNonEmptyStrings(convertStringArray(ch.emails, lang)),
       phoneNumbers: convertPhoneNumberList(ch.phoneNumbers, lang),
       addresses: convertAddressList(ch.addresses, lang),
       channelUrls: convertChannelUrlList(ch.channelUrls, lang),
-      // automaticTranslationUsed: lang !== 'fi' && service.missing_texts_translated,
     };
   });
 
@@ -140,12 +139,14 @@ function convertStringArray(data: LangStringList, lang: Language): string[] {
 }
 
 /**
- * Filter string array so that it only contains unique string values
+ * Filter string array so that it only contains unique and non-empty string values
  * @param arr
  * @returns
  */
-function uniqueStrings(arr: string[]): string[] {
-  return arr.filter((val, index, self) => self.indexOf(val) === index);
+function uniqueNonEmptyStrings(arr: string[]): string[] {
+  return arr
+    .filter((val) => val.length > 0)
+    .filter((val, index, self) => self.indexOf(val) === index);
 }
 
 export function convertServiceName(
@@ -233,9 +234,9 @@ function convertCoordinates(
 ): { longitude: string | undefined; latitude: string | undefined } {
   if (latitude && longitude) {
     // ETRS-TM35FIN
-    var finnProjection = '+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs';
+    const finnProjection = '+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs';
     // WGS84
-    var wgsProjection =
+    const wgsProjection =
       '+proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees +no_defs';
 
     const [convLongitude, convLatitude] = proj4(finnProjection, wgsProjection, [
