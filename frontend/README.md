@@ -57,16 +57,6 @@ For installing chat widget `rasa-webchat` from local folder. The script assumes 
 
 Error `Assertion failed: Input argument is not an HTMLInputElement @ onloadwff.js` is caused by LastPass and is just noise. No need for concern.
 
-### Missing translation warnings (for municipality names)
-
-If specifying a municipality in bot message you might see a following warning in the console (in this example setting municipality to Turku while having UI in Finnish):
-
-> `Missing translation [@formatjs/intl Error MISSING_TRANSLATION] Missing message: "Turku" for locale "fi", using default message as fallback.`
-
-This is because for Finnish names of municipalities, no translations have been specified and instead the municipality name pulled from `src/components/municipalities.json` is used directly (by setting it as fallback, see `src/components/municipality-filter.tsx`). Hence, you can safely ignore these warnings for municipality names.
-
-> If you see missing translation warning for something else, do not ignore that 😅
-
 ### "I updated rasa-webchat but I am not seeing the changes..."
 
 If you made changes to [the fork of the `rasa-webchat` ](https://github.com/City-of-Turku/rasa-webchat) but running `npm install` does not seem to install the updated version from Github, here's what has worked for me:
